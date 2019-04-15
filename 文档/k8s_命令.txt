@@ -1,0 +1,154 @@
+生成秘钥secret
+kubectl create secret docker-registry regsecret --docker-server=10.22.60.25 --docker-username=admin --docker-password=Harbor12345 --docker-email=houfei@sunline.cn
+
+添加命令自动补全：
+yum install -y bash-completion
+vim ~/.bashrc
+添加
+source <(kubectl completion bash)
+
+
+
+kubectl get deployments			## 查看副本数
+kubectl  get pod --all-namespaces -o wide		## 查看pod的信息
+kubectl  get pod --all-namespaces 				## 查看pod的信息
+kubectl delete deployment nginx-deployment
+
+kubectl delete -f nginx.yaml
+kubectl apply  -f nginx.yaml
+
+kubectl run kubernetes-bootcamp \
+--image=10.22.60.169/test/kubernetes-bootcamp:v1 \
+--port=8080
+
+kubectl expose deployment/kubernetes-bootcamp \
+--type="NodePort" \
+--port 8080
+
+
+强制删除pod
+kubectl  delete  pod bds-controller-69tbl --grace-period=0 --force
+
+部署服务：
+kubectl run kubernetes-bootcamp --image=10.22.60.169/test/kubernetes-bootcamp:v1 --port=8080
+
+端口映射：
+kubectl expose deployment/kubernetes-bootcamp --type="NodePort" --port 8080
+
+增加副本数：
+kubectl scale deployments/kubernetes-bootcamp --replicas=3
+
+收缩：
+kubectl scale deployments/kubernetes-bootcamp --replicas=2
+
+滚动更新：
+kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=docker.io/jocatalin/kubernetes-bootcamp:v2
+
+回滚：
+kubectl rollout undo deployments/kubernetes-bootcamp
+
+创建label:
+kubectl label node k8s-node01 disktype=ssd
+
+查看labels：
+kubectl get node --show-labels
+
+删除label：
+kubectl label node k8s-node01 disktype-
+
+查看其配置和运行状态：
+kubectl  edit  deployment nginx-deployment	
+
+进入pod
+kubectl  exec -it -n weave weave-scope-agent-5kzl7 -- /bin/bash
+-n: namespaces
+weave-scope-agent-5kzl7为pod
+
+查看日志
+kubectl  log --tail=110 -f etcd-odcbsck8s01 -n  kube-system
+kubectl  log --tail=210 etcd-odcbsck8s01 -n  kube-system
+
+
+label：
+案例：
+# kubectl label node k8s-node01 disktype=ssd
+node "k8s-node01" labeled
+# kubectl  get node --show-labels 
+NAME         STATUS    ROLES     AGE       VERSION   LABELS
+k8s-master   Ready     master    3d        v1.10.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=k8s-master,node-role.kubernetes.io/master=
+k8s-node01   Ready     <none>    3d        v1.10.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,disktype=ssd,kubernetes.io/hostname=k8s-node01
+k8s-node02   Ready     <none>    3d        v1.10.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=k8s-node02
+
+
+
+
+
+yaml配置文件:
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-deployment-test
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+         app: web_server
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+      nodeSelector:			# 标签label
+        disktype: ssd		# 上一步配置的标签（将pod配置到标签所在的服务器上）
+		
+# kubectl  apply  -f nginx.yaml
+
+删除label：
+# kubectl label node k8s-node01 disktype-		
+
+
+###########################################    kubernetes常用命令    ##################################################
+
+ kubernetes常用命令
+kubernetes常用命令
+1、查看类命令
+kubectl cluster-info    ----查看集群信息
+kubectl -s http://localhost:8080 get componentstatuses    ----查看各组件信息
+kubectl get pods    ----列出当前所有的pod
+kubectl get pods -o wide    ----查看pods所在的运行节点
+kubectl get pods -o yaml    ----查看pods定义的详细信息
+kubectl get rc    ----查看Replication Controller信息
+kubectl get service    ----查看service的信息
+kubectl get nodes    ----查看节点信息
+kubectl get pod --selector name=redis    ----按selector名来查找pod
+kubectl exec pod名 env    ----查看运行的pod的环境变量
+2、操作类命令
+kubectl create -f 文件名    ----创建
+kubectl replace -f 文件名  [--force]    ----重建
+删除：
+kubectl delete -f 文件名
+kubectl delete pod pod名
+kubectl delete rc rc名
+kubectl delete service service名
+kubectl delete pod --all
+kubectl run mybusybox --image=busybox    ----启动一个pod
+kubectl run mybusybox --image=busybox --replicas=5    ----启动多个pod
+kubectl delete deployments mybusybox    ----删除创建的pod
+kubectl get pods    ----列出当前所有的pod
+kubectl describe pod [PODNAME]    ----查看pod的状态
+kubectl run mynginx --image=nginx --port=80 --hostport=8000    ----创建带有端口映射的pod
+kubectl run -i --tty busybox --image=busybox    ----创建带有终端的pod
+
+
+#################################################################################################################################
+
+
+
+
+
+
+#############################################   helm     ########################################################################
+删除：helm delete els-1
+删除：helm  del --purge els-1
+查看：helm list
+查看：helm ls

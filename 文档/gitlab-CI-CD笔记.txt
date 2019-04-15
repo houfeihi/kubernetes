@@ -1,0 +1,83 @@
+确保：服务器配置docker证书并登陆，可以拉取10.22.60.25/test/maven1:3-jdk-8镜像
+
+
+
+
+runner配置
+启动的时候映射宿主机的docker sock文件
+docker run -it -d  -v /var/run/docker.sock:/var/run/docker.sock  gitlab-runner-jdk-mvn-svn-get
+
+配置runner的时候：配置镜像
+10.22.60.25/test/maven1:3-jdk-8
+
+maven中的仓库地址更换为内网地址
+10.22.60.25/test/maven1:3-jdk-8（已修改版本）
+
+gitlab-ci文件，添加获取镜像的地址
+image: 10.22.60.25/test/maven1:3-jdk-8
+
+
+
+gitlab clone的地址要和生成的地址一致
+
+
+
+#####################################################
+
+gitlab安装：
+ 
+docker run -d \
+    --hostname gitlab \
+    --publish 8443:443 --publish 80:80 --publish 2222:22 \
+    --name gitlab \
+    --restart always \
+	docker.io/gitlab/gitlab-runner:v11.6.0
+
+vim /etc/gitlab/gitlab.rb		## 修改参数
+external_url "http://IP"
+
+重启giltlab
+docker restart gitlab
+	
+
+
+runner安装流程：
+启动runner容器
+# docker run -it -d  -v /var/run/docker.sock:/var/run/docker.sock  gitlab-runner-jdk-mvn-svn-get
+a024bc5c8c234c611009a57c024c356a591de1bc205df63fc8d19c00c635960f
+
+进入容器内部
+# docker exec -it a0 /bin/bash
+
+#填写信息（镜像地址写：10.22.60.25/test/maven1:3-jdk-8，这个是在maven:3-jdk-8上修改nexus以后的信息）
+
+# .gitlab-ci.yaml
+image: '10.22.60.25/test/maven1:3-jdk-8'
+
+variables:
+  GIT_STRATEGY: fetch
+
+stages:
+  - build
+  - deploy
+build:
+   stage: build
+   script:
+     - export MAVEN_OPTS="$MAVEN_OPTS -Duser.language=en"
+     - mvn clean compile
+   tags:
+     - POC
+
+deploy:
+   stage: deploy
+   script:
+     - mvn deploy -Podc-public
+   only:
+     - master
+     - /^.*-stable$/
+   tags:
+     - POC
+
+
+
+

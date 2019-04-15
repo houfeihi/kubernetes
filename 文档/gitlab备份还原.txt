@@ -1,0 +1,23 @@
+1、gitlab备份
+gitlab-rake gitlab:backup:create
+
+使用以上备份命令会在/var/opt/gitlab/backups目录下生成备份文件
+可以通过修改配置文件，指定默认备份的路径"gitlab_rails['backup_path'] = ",修改完成后重载配置文件"gitlab-ctl reconfigure"
+
+
+2、gitlab恢复
+
+# 停止相关数据连接服务
+gitlab-ctl stop unicorn
+gitlab-ctl stop sidekiq
+
+
+gitlab-rake gitlab:backup:restore BACKUP=1533620912_2018_08_07_10.0.0
+
+
+3、重启服务
+
+gitlab-ctl restart
+
+
+

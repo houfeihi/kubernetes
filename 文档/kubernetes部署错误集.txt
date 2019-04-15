@@ -1,0 +1,4 @@
+错误1：
+Failed create pod sandbox: rpc error: code = Unknown desc = failed to start sandbox container for pod "default-http-backend-5769d9d465-vj9vc": Error response from daemon: OCI runtime create failed: container_linux.go:344: starting container process caused "process_linux.go:297: getting the final child's pid from pipe caused \"EOF\"": unknown
+解决：更换dockers版本
+kubernetes1.13 使用的docker 18.09版本出现这种错误，尝试更换docker版本为18.06 ，问题解决

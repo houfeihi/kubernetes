@@ -1,0 +1,90 @@
+kubernetes Rolling Update和回滚
+
+1、nginx-rc.yaml
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:perl
+          ports:
+            - containerPort: 80
+			
+			
+2、通过kubectl apply部署
+[root@k8s-master ~]# kubectl  apply -f nginx-rc.yaml 
+deployment.apps/nginx created
+
+[root@k8s-master ~]# kubectl get deployments nginx -o wide
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR
+nginx   1/1     1            1           24h   nginx        nginx:perl   name=nginx
+
+[root@k8s-master ~]# kubectl get replicaset -o wide
+NAME               DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES       SELECTOR
+nginx-8487cb4d8d   1         1         1       50s   nginx        nginx:perl   name=nginx,pod-template-hash=8487cb4d8d
+
+
+# 更新版本的时候加上"--record"保存一下记录，用于版本回滚
+[root@k8s-master ~]# kubectl  apply -f nginx-rc.yaml  --record
+deployment.apps/nginx configured
+
+修改nginx版本
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.15
+          ports:
+            - containerPort: 80
+
+
+[root@k8s-master ~]# kubectl get replicaset -o wide
+NAME               DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES       SELECTOR
+nginx-6f7dbdb6bd   1         1         1       23s     nginx        nginx:1.15   name=nginx,pod-template-hash=6f7dbdb6bd
+nginx-8487cb4d8d   0         0         0       5m22s   nginx        nginx:perl   name=nginx,pod-template-hash=8487cb4d8d
+
+[root@k8s-master ~]# kubectl  get pod
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-6f7dbdb6bd-bhzdq   1/1     Running   0          46s
+......
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  6m44s  deployment-controller  Scaled up replica set nginx-8487cb4d8d to 1
+  Normal  ScalingReplicaSet  105s   deployment-controller  Scaled up replica set nginx-6f7dbdb6bd to 1
+  Normal  ScalingReplicaSet  99s    deployment-controller  Scaled down replica set nginx-8487cb4d8d to 0
+
+[root@k8s-master ~]# kubectl  rollout history deployment nginx
+deployment.extensions/nginx 
+REVISION  CHANGE-CAUSE
+6         kubectl apply --filename=nginx-rc1.yaml --record=true
+7         kubectl apply --filename=nginx-rc2.yaml --record=true
+9         kubectl apply --filename=nginx-rc4yaml --record=true
+
+# 版本回滚：在当前的版本，重新生成一个版本，版本号+1
+[root@k8s-master ~]# kubectl  rollout undo deployment nginx --to-revision=7
+deployment.extensions/nginx rolled back
+[root@k8s-master ~]# kubectl  rollout history deployment nginx
+deployment.extensions/nginx 
+REVISION  CHANGE-CAUSE
+6         kubectl apply --filename=nginx-rc1.yaml --record=true
+9         kubectl apply --filename=nginx-rc4yaml --record=true
+10        kubectl apply --filename=nginx-rc2.yaml --record=true
+

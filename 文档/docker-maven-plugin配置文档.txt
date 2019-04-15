@@ -1,0 +1,126 @@
+
+
+
+ No plugin found for prefix 'docker' in the current project and in the plugin groups 
+检查pom文件没有任何问题，最后发现在maven的conf/setting.xml中要加入:
+    <pluginGroups>  
+        <pluginGroup>com.spotify</pluginGroup>  
+    </pluginGroups>
+	
+	
+
+docker-maven-plugin 配置说明
+
+1、安装docker环境
+2、安装maven环境（依赖jdk）
+3、修改settings.xml文件
+   3.1、添加阿里云中央仓库
+	<mirror>
+	  <id>alimaven</id>
+		<mirrorOf>central</mirrorOf>
+		<name>aliyun maven</name>
+		<url>http://maven.aliyun.com/nexus/content/repositories/central/</url>
+	</mirror>
+
+	<mirror>
+	  <id>nexus-aliyun</id>
+	  <mirrorOf>central</mirrorOf>
+	  <name>Nexus aliyun</name>
+	  <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+	</mirror>
+
+	<mirror>
+	  <id>central</id>
+	  <name>Maven Repository Switchboard</name>
+	  <url>http://repo1.maven.org/maven2/</url>
+	  <mirrorOf>central</mirrorOf>
+	  </mirror>
+	  
+	<mirror>
+	  <id>repo2</id>
+	  <mirrorOf>central</mirrorOf>
+	  <name>Human Readable Name for this Mirror.</name>
+	  <url>http://repo2.maven.org/maven2/</url>
+	</mirror>
+
+	<mirror>
+	  <id>ibiblio</id>
+	  <mirrorOf>central</mirrorOf>
+	  <name>Human Readable Name for this Mirror.</name>
+	  <url>http://mirrors.ibiblio.org/pub/mirrors/maven2/</url>
+	</mirror>
+
+	<mirror>
+	  <id>jboss-public-repository-group</id>
+	  <mirrorOf>central</mirrorOf>
+	  <name>JBoss Public Repository Group</name>
+	  <url>http://repository.jboss.org/nexus/content/groups/public</url>
+	</mirror>
+
+   3.2、添加一下配置
+       <pluginGroups>  
+        <pluginGroup>com.spotify</pluginGroup>  
+	   </pluginGroups>
+
+	
+	3.3、配置推送
+	  <server>
+		<id>my-docker-registry</id>
+		<username>admin</username>
+		<password>Harbor12345</password>
+		<configuration>
+		  <email>houfei@sunline.cn</email>
+		</configuration>
+	  </server>
+		
+	
+4、修改pom文件,添加配置docker-maven-plugin
+	<plugin>
+	  <groupId>com.spotify</groupId>
+	  <artifactId>docker-maven-plugin</artifactId>
+	  <version>0.4.13</version>
+	  <configuration>
+			<imageName>10.22.60.25/test/${project.artifactId}</imageName>
+			<dockerDirectory>./</dockerDirectory>
+	<!--    <dockerDirectory>/data/docker</dockerDirectory> -->
+			<resources>
+			  <resource>
+					<targetPath>/</targetPath>
+					<directory>${project.build.directory}</directory>
+					<include>${project.build.finalName}.war</include>
+			  </resource>
+			</resources>
+			<serverId>my-docker-registry</serverId>			## 配置推送
+	  </configuration>
+	</plugin>
+
+
+
+
+			
+			
+5、dockerfile
+FROM 10.22.60.25/basic/centos-jdk1.8:7.2.1511
+ADD target/docker/dubbo-admin-2.5.7.war /dubbo-admin-2.5.7.war
+EXPOSE 9000
+CMD  /bin/bash
+	
+	
+	
+6、构建命令
+mvn clean install docker:build -DdockerImageTags=v3 -DpushImage
+
+-DdockerImageTags：标记tag版本	
+-DpushImage：启动推送
+-DskipDockerBuild：跳过图像构建
+-DskipDockerTag：跳过图片标签
+-DskipDockerPush：跳过图像推送
+-DskipDocker：跳过任何Docker目标
+
+构建镜像：       mvn docker:build
+启动镜像：       mvn docker:start
+停止镜像：       mvn docker:stop
+删除镜像：       mvn -Ddocker.removeAll docker:remove
+查看镜像日志：   mvn docker:logs
+
+	

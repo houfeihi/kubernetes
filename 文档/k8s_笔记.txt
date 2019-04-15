@@ -1,0 +1,15 @@
+requests	# 改资源的最小申请量，系统必须满足需求
+limits		# 该资源最大允许使用量，不能被突破
+
+例子：
+spec:
+  containers:
+  - name: db			# pod名字
+    images: mysql		# 镜像地址
+	resources:			# 资源分配
+	  requests:			# 最小资源
+	    memory: "64Mi"	# 内存67MB
+		cpu: "250m"		# 0.25个CPU（千分制）
+	  limits:			# 最大资源使用范围
+	    memory: "128Mi"	# 内存128MB
+		cpu: "650m"		# 0.65个CPU（千分制）

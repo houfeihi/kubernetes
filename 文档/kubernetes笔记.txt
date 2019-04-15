@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-bds-etc
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+#  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    path: /var/lib/docker/nfs/config/bds_conf/etc
+    server: 10.22.60.25
+
+	
+###############    注解      ###########
+	
+capacity：指定PV的容量为1GB
+	
+accessModes：指定访问模式为ReadWriteOnce
+	支持的访问模式有3种：
+		ReadWriteOnce表示PV能以read-write模式mount到单个节点
+		ReadOnlyMany表示PV能以read-only模式mount到多个节点
+		ReadWriteMany表示PV能以read-write模式mount到多个节点
+	
+persistentVolumeReclaimPolicy：指定当PV的回收策略为Recycle
+	支持的策略有3种：
+		Retain表示需要管理员手工回收
+		Recycle表示清除PV中的数据，效果相当于执行rm  -rf /thevolume/*
+		Delete表示删除Storage Provider上的对应存储资源
+		
+storageClassName：指定PV的class为nfs
+	相当于为PV设置了一个分类
+	PVC可以指定class申请相应class的PV
+
+nfs:	
+指定PV在NFS服务器上对应的目录
+
+
+
+
+################################       网络       ##############################
+
+Kubernetes提供了三种方式让外界能够与Pod通信：
+	NodePort: Service通过Cluster节点的静态端口对外提供服务。
+		外部可以通过<NodeIP>:<NodePort>访问Service。
+	LoadBalancer: Service利用cloud  provider提供的load
+		balancer对外提供服务，cloud provider负责将load balancer
+		的流量导向Service。目前支持的cloud provider有GCP、AWS、
+		Azur等。
+	Ingress：Ingress由两部分组成：Ingress Controller 和 Ingress 服务。
+        Ingress Controller 通过与 Kubernetes API 交互，动态的去感知集群中
+		Ingress 规则变化，然后读取它，按照自定义的规则，规则就是写明了哪个
+		域名对应哪个service，生成一段 Nginx 配置，再写到 Nginx-ingress-control的
+		Pod 里，这个 Ingress Contronler 的pod里面运行着一个nginx服务，控制器会把
+		生成的nginx配置写入/etc/nginx.conf文件中，然后 reload 一下 使用配置生效。
+		以此来达到域名分配置及动态更新的问题。
+		
+		网络方案网络方案
+kubernetes目前已有多种支持Kubernetes的网络方案，
+比如:Flannel
+	 Calico
+	 Canal
+	 Weave  Net等
+因为它们都实现了CNI规范，用户无论选择哪种方案，得到的网络
+模型都一样，即每个Pod都有独立的IP，可以直接通信。区别在于
+不同方案的底层实现不同，有的采用基于VxLAN的Overlay实现，有
+的则是Underlay，性能上有区别。再有就是是否支持Network Policy
+
+
+默认情况下，所有Pod是非隔离的，即任何来源的网络流量都能
+够访问Pod，没有任何限制。当为Pod定义了Network Policy时，只有
+Network Policy允许的流量才能访问Pod。
+不过，不是所有的Kubernetes网络方案都支持Network Policy。比
+如Flannel就不支持，Calico是支持的。
+
+
+Controller
+Controller中定义了Pod的部署特性，比如有几个副本、在什么样
+的Node上运行等
+
+Deployment:是最常用的Controller,Deployment可以管理Pod的多个副
+		本，并确保Pod按照期望的状态运行
+		
+ReplicaSet:实现了Pod的多副本管理。使用Deployment时会自动创建
+		ReplicaSet，也就是说Deployment是通过ReplicaSet来管理
+		Pod的多个副本的，我们通常不需要直接使用ReplicaSet。
+
+DaemonSet:用于每个Node最多只运行一个Pod副本的场景。
+		正如其名称所揭示的，DaemonSet通常用于运行daemon

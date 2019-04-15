@@ -1,0 +1,81 @@
+#######   docker安装gitlab    #########
+
+docker pull gitlab/gitlab-ce:latest
+
+docker run --detach \
+--hostname gitlab.example.com \
+--publish 443:443 --publish 80:80 --publish 222:22 \
+--name gitlab \
+--restart always \
+--volume /srv/gitlab/config:/etc/gitlab \
+--volume /srv/gitlab/logs:/var/log/gitlab \
+--volume /srv/gitlab/data:/var/opt/gitlab \
+gitlab/gitlab-ce:latest
+
+
+
+git push origin master
+
+####### docker 安装  gitlab-runner   ###########
+
+docker run -d --name gitlab-runner --restart always \
+-v /srv/gitlab-runner/config:/etc/gitlab-runner \
+-v /var/run/docker.sock:/var/run/docker.sock \
+gitlab/gitlab-runner:latest
+
+
+$ docker exec -it gitlab-runner gitlab-ci-multi-runner register
+Runtime platform                                    arch=amd64 os=linux pid=15 revision=cf91d5e1 version=11.4.2
+Running in system-mode.                            
+                                                   
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+>>> http://192.168.253.143/
+Please enter the gitlab-ci token for this runner:
+>>> 5_G8zu_MDbWCX6atWXTv
+Please enter the gitlab-ci description for this runner:
+[0bfb3c3896bc]: gitlab-runne^R
+>>> gitlab-runner01
+Please enter the gitlab-ci tags for this runner (comma separated):
+>>> gitlab-runner-01
+Registering runner... succeeded                     runner=5_G8zu_M
+Please enter the executor: docker, shell, virtualbox, docker+machine, kubernetes, docker-ssh, parallels, ssh, docker-ssh+machine:
+>>> docker
+Please enter the default Docker image (e.g. ruby:2.1):
+>>> maven:3-jdk-8
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded! 
+
+
+
+
+############   centos 7 安装 gitlab-runner   #################
+
+
+1、配置第三方库
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
+
+2、安装gitlab-runner
+sudo yum install gitlab-runner
+
+3、注册runner
+gitlab-runner register
+Runtime platform                                    arch=amd64 os=linux pid=3138 revision=cf91d5e1 version=11.4.2
+Running in system-mode.                            
+                                                   
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+http://192.168.253.155/
+Please enter the gitlab-ci token for this runner:
+-HZ7Jw9qvCWw6dQG9FNZ
+Please enter the gitlab-ci description for this runner:
+[localhost.localdomain]: test-runner-000    
+Please enter the gitlab-ci tags for this runner (comma separated):
+test-runner-0111
+Registering runner... succeeded                     runner=-HZ7Jw9q
+Please enter the executor: docker, parallels, kubernetes, docker-ssh, shell, ssh, virtualbox, docker+machine, docker-ssh+machine:
+shell
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+
+
+
+
+
+

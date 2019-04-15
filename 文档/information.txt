@@ -1,0 +1,69 @@
+select * from cbsrdpbase.rdpsystem;
+
+update rdpsystem  set CONNECTIP='10.22.60.171';
+
+88889999
+
+update ctb_user set login_status=0;
+
+
+systemctl stop kubelet
+hostnamectl set-hostname 
+
+
+
+后台核心: 10.22.60.4:3306/bay_1_6_1_test
+前台柜面: 10.22.60.4:3306/cbsrdpbase
+
+10.22.60.28
+root
+SunHT$8062
+
+/etc/pki/tls/certs/ODCBSCAMP01.odc.sunline.cn.cert.pem   crt
+/etc/pki/tls/private/ODCBSCAMP01.odc.sunline.cn.key
+
+
+kubectl apply -f Opaq_Secret.yaml
+kubectl apply -f ServiceAccount.yaml
+kubectl apply -f ConfigMap.yaml
+kubectl apply -f Role.yaml
+kubectl apply -f RoleBinding.yaml
+kubectl apply -f Deployment.yaml
+
+
+kubectl delete -f Opaq_Secret.yaml
+kubectl delete -f ServiceAccount.yaml
+kubectl delete -f ConfigMap.yaml
+kubectl delete -f Role.yaml
+kubectl delete -f RoleBinding.yaml
+kubectl delete -f Deployment.yaml
+
+
+image: 10.22.60.25/test/maven:3.5-jdk-8
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+
+cache:
+  paths: 
+    - .m2/repository
+	
+compile:
+  stage: build
+  script:
+    - 'mvn $MAVEN_CLI_OPTS test-compile'
+  tags:
+    - kubernetes
+
+verify:
+  stage: test
+  script:
+    - 'mvn $MAVEN_CLI_OPTS verify'
+
+  artifacts:
+    paths:
+	- target/*.jar
+
+  tags:
+    - kubernetes

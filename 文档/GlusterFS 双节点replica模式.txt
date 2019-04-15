@@ -1,0 +1,120 @@
+GlusterFS 双节点replica模式
+
+准备：
+1、两台机器挂载一个硬盘/逻辑卷用于GlusterFS的存储
+/dev/mapper/vgs_dt01-GlusterFS  4.9G  155M  4.4G   4% /data/gluster
+2、关闭防火墙
+	节点			存储挂载	主机名
+10.22.60.33		/data/gluster	ODCBSCFMP01
+10.22.60.34		/data/gluster	ODCBSCFMP02
+
+
+安装：
+1、安装GlusterFS（两台）
+yum install centos-release-gluster
+yum install -y glusterfs glusterfs-server glusterfs-fuse glusterfs-rdma
+
+2、启动GlusterFS（两台）
+systemctl start glusterd.service
+systemctl enable glusterd.service
+
+3、让所有存储集群节点做成trusted pool(也就是建立连接)(10.22.60.33)
+
+[root@ODCBSCFMP01 gluster]# gluster peer probe ODCBSCFMP01
+[root@ODCBSCFMP01 gluster]# gluster peer probe ODCBSCFMP02
+[root@ODCBSCFMP01 gluster]# gluster peer status
+Number of Peers: 1
+
+Hostname: ODCBSCFMP02
+Uuid: 0e425b3f-80d0-4db2-9b12-6ad1dbe40483
+State: Peer in Cluster (Connected)
+
+4、在(10.22.60.34)操作
+[root@ODCBSCFMP02 ~]# gluster peer status	 --只需要在此节点看状态就可以发现它和另一个节点已经建立连接了
+Number of Peers: 1
+
+Hostname: ODCBSCFMP01
+Uuid: 53fc6241-d56c-404f-8fbb-2fbb82cfdfc1
+State: Peer in Cluster (Connected)
+
+
+5、创建数据目录(两台)
+mkdir /data/gluster/data  -p	--都去在上面准备好的存储目录里再建立一个子目录叫gv0
+
+
+6、创建volume(10.22.60.33)
+创建gluster volume取名叫gv0
+在其中一个存储节点上做执行下面的命令(我这里是在10.22.60.33),其它不用执行
+# gluster volume create gv0 replica 3 ODCBSCFMP01:/data/gluster/data ODCBSCFMP01:/data/gluster/data 
+volume create: gv0: success: please start the volume to access data
+
+说明
+--replica 3后面的数字与你的节点数有关（replica是类似raid1的模式)
+--gluster默认不做成根分区，建议使用单独的存储磁盘去挂载/data/gluster/data。如果你是用根分区来做的话，那么上面的命令需要再加一个force参数，变成
+# gluster volume create gv0 replica 3 ODCBSCFMP01:/data/gluster/data ODCBSCFMP01:/data/gluster/data force
+
+
+
+7、命令查看到下面的gv0相关的信息
+# gluster volume info	--在所有存储节点上都可以使此命令查看到下面的gv0相关的信息
+
+Volume Name: gv0
+Type: Replicate			--模式为replicate模式
+Volume ID: 4dd30149-f68a-40d0-965a-b37fc9d47d02
+Status: Created			--这里状态为created,表示刚创建，还未启动
+Number of Bricks: 1 x 2 = 2
+Transport-type: tcp
+Bricks:
+Brick1: ODCBSCFMP01:/data/gluster/data
+Brick2: ODCBSCFMP02:/data/gluster/data
+Options Reconfigured:
+transport.address-family: inet
+nfs.disable: on
+performance.client-io-threads: off
+
+
+8、启动volume
+# gluster volume start gv0
+volume start: gv0: success
+
+# gluster volume info
+Volume Name: gv0
+Type: Replicate
+Volume ID: 4dd30149-f68a-40d0-965a-b37fc9d47d02
+Status: Started
+Snapshot Count: 0
+Number of Bricks: 1 x 2 = 2
+Transport-type: tcp
+Bricks:
+Brick1: ODCBSCFMP01:/data/gluster/data
+Brick2: ODCBSCFMP02:/data/gluster/data
+Options Reconfigured:
+transport.address-family: inet
+nfs.disable: on
+performance.client-io-threads: off
+
+
+
+
+9、客户端安装（任意节点，或其他节点）
+# 切记不用一定要先安装centos-release-gluster，否则客户端和服务的 版本不至于，挂载会报错：
+Mount failed. Please check the log file for more details gluster
+
+# yum install centos-release-gluster
+# yum install -y glusterfs glusterfs-fuse
+
+10、客户端挂载
+# mount -t glusterfs 10.22.60.33:/gv0 /mnt
+# df -h
+......
+10.22.60.33:/gv0                4.9G  204M  4.4G   5% /mnt
+
+
+
+
+
+
+
+
+
+

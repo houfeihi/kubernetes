@@ -1,0 +1,6 @@
+在master安装
+[root@szy-k8s-master /]# yum install -y nfs-utils rpcbind
+#在每个node安装
+[root@szy-k8s-node1 /]# yum install -y nfs-utils 
+#在每个node安装
+[root@szy-k8s-node2 /]# yum install -y nfs-utils 

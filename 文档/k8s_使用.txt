@@ -1,0 +1,42 @@
+10.22.60.28
+root
+SunHT$8062
+
+
+kubectl create secret docker-registry sun_k8s --docker-server=10.22.60.169 --docker-username=admin --docker-password=Harbor12345 --docker-email=houfei@sunline.cn
+
+
+
+systemctl stop  kubelet
+docker ps
+docker  stop `docker ps | awk '{print $1}'`
+docker rm `docker ps -a | awk '{print $1}'`
+docker rmi `docker images | awk '{print $3}'`
+
+
+
+docker push  10.22.60.169/sunline_k8s/kube-proxy-amd64
+docker push  10.22.60.169/sunline_k8s/kube-controller-manager-amd64
+docker push  10.22.60.169/sunline_k8s/kube-scheduler-amd64
+docker push  10.22.60.169/sunline_k8s/kube-apiserver-amd64
+docker push  10.22.60.169/sunline_k8s/etcd-amd64
+docker push  10.22.60.169/sunline_k8s/kubernetes-dashboard-amd64
+docker push  10.22.60.169/sunline_k8s/k8s-dns-dnsmasq-nanny-amd64
+docker push  10.22.60.169/sunline_k8s/k8s-dns-sidecar-amd64
+docker push  10.22.60.169/sunline_k8s/k8s-dns-kube-dns-amd64
+docker push  10.22.60.169/sunline_k8s/flannel
+docker push  10.22.60.169/sunline_k8s/pause-amd64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
