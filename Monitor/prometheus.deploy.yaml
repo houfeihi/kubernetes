@@ -17,7 +17,7 @@ spec:
         app: prometheus
     spec:
       containers:
-      - image: registry.odc.sunline.cn/monitor/prometheus:v2.0.0
+      - image: registry.cn-hangzhou.aliyuncs.com/houfei/prometheus:v2.0.0
         name: prometheus
         command:
         - "/bin/prometheus"
